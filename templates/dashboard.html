@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}管理员仪表盘 - 用户管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1>管理员仪表盘</h1>
+    
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <div id="stats" class="stats-grid" style="display: none;">
+        <div class="stat-card">
+            <div class="stat-number" id="total-users">-</div>
+            <div class="stat-label">用户总数</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="today-new">-</div>
+            <div class="stat-label">今日新增</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="week-new">-</div>
+            <div class="stat-label">本周新增</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetchStats();
+});
+
+function fetchStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-users').textContent = data.total_users;
+            document.getElementById('today-new').textContent = data.today_new;
+            document.getElementById('week-new').textContent = data.week_new;
+            
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('stats').style.display = 'grid';
+        })
+        .catch(error => {
+            console.error('Error fetching stats:', error);
+            document.getElementById('loading').innerHTML = '<p>加载数据失败，请稍后重试</p>';
+        });
+}
+</script>
+{% endblock %}

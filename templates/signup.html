@@ -1,12 +1,193 @@
-<!DOCTYPE html>
-<html lang="en">
-    <body>
-        <h1> Hello, please sign up! </h1>
-        <form method="POST" action="/">
-            {{ form.csrf_token }}
-            {{ form.name.label }} {{ form.name(size=20) }}
-            {{ form.email.label }} {{ form.email(size=20) }}
-            <input type="submit" value="Go">
-        </form>
-    </body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}用户注册 - 用户管理系统{% endblock %}
+
+{% block content %}
+<div class="card" style="max-width: 500px; margin: 20px auto;">
+    <h1>用户注册</h1>
+    
+    <form id="signup-form" method="POST" action="/">
+        {{ form.csrf_token }}
+        
+        <div class="form-group">
+            {{ form.name.label }}
+            {{ form.name(placeholder='请输入您的姓名', id='name') }}
+            {% if form.name.errors %}
+                {% for error in form.name.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+            <span class="error" id="name-error" style="display: none;"></span>
+        </div>
+        
+        <div class="form-group">
+            {{ form.email.label }}
+            {{ form.email(placeholder='请输入您的邮箱', id='email') }}
+            {% if form.email.errors %}
+                {% for error in form.email.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+            <span class="error" id="email-error" style="display: none;"></span>
+        </div>
+        
+        <div class="form-group">
+            {{ form.password.label }}
+            {{ form.password(placeholder='请输入密码（至少8位，包含字母和数字）', id='password') }}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+            <span class="error" id="password-error" style="display: none;"></span>
+            <div id="password-strength" style="margin-top: 8px; font-size: 14px;">
+                <span id="strength-label"></span>
+                <div style="height: 4px; background: #e0e0e0; border-radius: 2px; margin-top: 5px; overflow: hidden;">
+                    <div id="strength-bar" style="height: 100%; width: 0%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            {{ form.confirm_password.label }}
+            {{ form.confirm_password(placeholder='请再次输入密码确认', id='confirm-password') }}
+            {% if form.confirm_password.errors %}
+                {% for error in form.confirm_password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            {% endif %}
+            <span class="error" id="confirm-password-error" style="display: none;"></span>
+        </div>
+        
+        {{ form.submit(class='btn', style='width: 100%;') }}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('signup-form');
+    var nameInput = document.getElementById('name');
+    var emailInput = document.getElementById('email');
+    var passwordInput = document.getElementById('password');
+    var confirmPasswordInput = document.getElementById('confirm-password');
+    var strengthLabel = document.getElementById('strength-label');
+    var strengthBar = document.getElementById('strength-bar');
+    
+    function showError(element, message) {
+        var errorEl = document.getElementById(element.id + '-error');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+    }
+    
+    function hideError(element) {
+        var errorEl = document.getElementById(element.id + '-error');
+        if (errorEl) {
+            errorEl.style.display = 'none';
+        }
+    }
+    
+    function validateEmail(email) {
+        var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    }
+    
+    function checkPasswordStrength(password) {
+        var score = 0;
+        
+        if (password.length >= 8) score += 1;
+        if (password.length >= 12) score += 1;
+        if (/[a-z]/.test(password)) score += 1;
+        if (/[A-Z]/.test(password)) score += 1;
+        if (/[0-9]/.test(password)) score += 1;
+        if (/[^a-zA-Z0-9]/.test(password)) score += 1;
+        
+        return score;
+    }
+    
+    function updatePasswordStrength() {
+        var password = passwordInput.value;
+        
+        if (password.length === 0) {
+            strengthLabel.textContent = '';
+            strengthBar.style.width = '0%';
+            strengthBar.style.background = '#e0e0e0';
+            return;
+        }
+        
+        var score = checkPasswordStrength(password);
+        
+        if (score <= 2) {
+            strengthLabel.textContent = '弱';
+            strengthLabel.style.color = '#dc3545';
+            strengthBar.style.width = '30%';
+            strengthBar.style.background = '#dc3545';
+        } else if (score <= 4) {
+            strengthLabel.textContent = '中';
+            strengthLabel.style.color = '#ffc107';
+            strengthBar.style.width = '60%';
+            strengthBar.style.background = '#ffc107';
+        } else {
+            strengthLabel.textContent = '强';
+            strengthLabel.style.color = '#28a745';
+            strengthBar.style.width = '100%';
+            strengthBar.style.background = '#28a745';
+        }
+    }
+    
+    function validatePassword(password) {
+        var errors = [];
+        
+        if (password.length < 8) {
+            errors.push('密码至少需要8个字符');
+        }
+        if (!/[a-zA-Z]/.test(password)) {
+            errors.push('密码必须包含至少一个字母');
+        }
+        if (!/[0-9]/.test(password)) {
+            errors.push('密码必须包含至少一个数字');
+        }
+        
+        return errors;
+    }
+    
+    passwordInput.addEventListener('input', updatePasswordStrength);
+    
+    form.addEventListener('submit', function(e) {
+        var isValid = true;
+        
+        hideError(nameInput);
+        if (nameInput.value.trim().length < 2) {
+            showError(nameInput, '姓名至少需要2个字符');
+            isValid = false;
+        }
+        
+        hideError(emailInput);
+        if (!validateEmail(emailInput.value)) {
+            showError(emailInput, '请输入有效的邮箱地址');
+            isValid = false;
+        }
+        
+        hideError(passwordInput);
+        var passwordErrors = validatePassword(passwordInput.value);
+        if (passwordErrors.length > 0) {
+            showError(passwordInput, passwordErrors.join('；'));
+            isValid = false;
+        }
+        
+        hideError(confirmPasswordInput);
+        if (confirmPasswordInput.value !== passwordInput.value) {
+            showError(confirmPasswordInput, '两次输入的密码不一致');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

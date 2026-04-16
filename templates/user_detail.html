@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}用户详情 - {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <a href="{{ url_for('users_list') }}" class="back-link">← 返回用户列表</a>
+    
+    <h1>用户详情</h1>
+    
+    <div class="detail-section">
+        <h3>基本信息</h3>
+        <div class="detail-row">
+            <span class="detail-label">ID：</span>
+            <span class="detail-value">{{ user.id }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">姓名：</span>
+            <span class="detail-value">{{ user.name }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">邮箱：</span>
+            <span class="detail-value">{{ user.email }}</span>
+        </div>
+        <div class="detail-row">
+            <span class="detail-label">注册时间：</span>
+            <span class="detail-value">{{ user.date_signed_up.strftime('%Y-%m-%d %H:%M:%S') if user.date_signed_up else '-' }}</span>
+        </div>
+    </div>
+    
+    <div class="detail-section">
+        <h3>操作日志</h3>
+        {% if logs %}
+            {% for log in logs %}
+            <div class="log-item">
+                <div class="log-time">{{ log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '-' }}</div>
+                <div class="log-action">{{ log.action }}</div>
+                {% if log.details %}
+                <div class="log-details">{{ log.details }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>暂无操作日志</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
