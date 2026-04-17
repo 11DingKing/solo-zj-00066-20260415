@@ -1,7 +1,7 @@
 import datetime
 import os
 import math
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, abort
 from sqlalchemy import func
 
 from forms import SignupForm, SearchForm
@@ -90,7 +90,9 @@ def users_list():
 
 @app.route("/users/<int:user_id>")
 def user_detail(user_id):
-    user = User.query.get_or_404(user_id)
+    user = User.query.get(user_id)
+    if user is None:
+        abort(404)
     logs = OperationLog.query.filter_by(user_id=user_id).order_by(OperationLog.timestamp.desc()).all()
     return render_template('user_detail.html', user=user, logs=logs)
 
